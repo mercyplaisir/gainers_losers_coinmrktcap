@@ -155,10 +155,11 @@ def gainers_losers():
     gainers_table,losers_table = soup.find_all('table')
     # tds:list = gainers_table.find_all('p',{'class':'sc-4984dd93-0 kKpPOn'})
     gainers = gainers_table.find_all('p',{'class':'sc-4984dd93-0 iqdbQL coin-item-symbol'})
-    gainers_volume_tr = gainers_table.find_all('tr')
+    gainers_volume_tr = gainers_table.find_all('tr',href=True)
     # print(gainers_volume_tr[1].fin)
     gainers_volume = [tr.find_all('td')[4].text for tr in gainers_volume_tr[1:]]
-    gainers_cmc_link = [tr.find_all('td')[1].a for tr in gainers_volume_tr[1:]]
+    gainers_cmc_link = [tr.find_all('td')[1].a['href'] for tr in gainers_volume_tr[1:]]
+
     gainers_change = [tr.find_all('td')[3].text for tr in gainers_volume_tr[1:]]
     # print(gainers_volume_tr_td)
     losers = losers_table.find_all('p',{'class':'sc-4984dd93-0 iqdbQL coin-item-symbol'})
