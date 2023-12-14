@@ -198,7 +198,8 @@ def get_crypto_data(cmc_link:str):
     req = requests.get(cmc_link)
     soup = BeautifulSoup(req.text,features="html.parser")
 
-    crypto_data = soup.find_all('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'})
+    tbl = soup.find('div',{'class': 'sc-f70bb44c-0 iQEJet'})
+    crypto_data = tbl.find_all('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'})
     mrkt_cap,volume,vol_mrkt_cap,_,_,_ = crypto_data
     # vol_on_mrkt_cap = soup.find('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'})
     return [mrkt_cap.text,volume.text,vol_mrkt_cap.text]
