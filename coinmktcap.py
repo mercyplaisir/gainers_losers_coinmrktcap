@@ -194,12 +194,14 @@ def gainers_losers():
         'chart_link' : [link.format(p.text+"USDT") for p in losers]
     }
     return gainers,losers
-def get_market_cap(cmc_link:str):
+def get_crypto_data(cmc_link:str):
     req = requests.get(cmc_link)
     soup = BeautifulSoup(req.text,features="html.parser")
 
-    mrkt_cap = soup.find('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'}).get('text')
-    return mrkt_cap
+    crypto_data = soup.find_all('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'})
+    mrkt_cap,volume,vol_mrkt_cap,_,_,_ = crypto_data
+    # vol_on_mrkt_cap = soup.find('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'})
+    return [mrkt_cap.text,volume.text,vol_mrkt_cap.text]
 
 
 gainers,losers = gainers_losers()
@@ -207,7 +209,14 @@ gainers,losers = gainers_losers()
 # gainers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in gainers['crypto']]
 # gainers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in gainers['crypto']]
 # gainers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in gainers['crypto']]
-gainers['market_cap'] = [get_market_cap(cmc_link) for cmc_link in gainers['cmc_link']]
+gainers['volume'] = []
+gainers['market_cap'] = []
+gainers['vol/mrktcap'] = []
+for link in gainers['cmc_link']:
+    m,v,v_m = get_crypto_data(link)
+    gainers['volume'].append(v)
+    gainers['market_cap'].append(m)
+    gainers['vol/mrktcap'].append(v_m)
 
 # losers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in losers['crypto']]
 # losers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in losers['crypto']]
