@@ -158,7 +158,7 @@ def gainers_losers():
     gainers_volume_tr = gainers_table.find_all('tr',href=True)
     # print(gainers_volume_tr[1].fin)
     gainers_volume = [tr.find_all('td')[4].text for tr in gainers_volume_tr[1:]]
-    gainers_cmc_link = [tr.find_all('td')[1].a['href'] for tr in gainers_volume_tr[1:]]
+    gainers_cmc_link = [tr.find_all('td')[1].a.get('href') for tr in gainers_volume_tr[1:]]
 
     gainers_change = [tr.find_all('td')[3].text for tr in gainers_volume_tr[1:]]
     # print(gainers_volume_tr_td)
