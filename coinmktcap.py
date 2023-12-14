@@ -112,6 +112,7 @@ def gainers_losers():
     gainers_volume_tr = gainers_table.find_all('tr')
     # print(gainers_volume_tr[1].fin)
     gainers_volume = [tr.find_all('td')[4].text for tr in gainers_volume_tr[1:]]
+    gainers_change = [tr.find_all('td')[3].text for tr in gainers_volume_tr[1:]]
     # print(gainers_volume_tr_td)
     losers = losers_table.find_all('p',{'class':'sc-4984dd93-0 iqdbQL coin-item-symbol'})
     losers_volume_tr = losers_table.find_all('tr')
@@ -126,6 +127,7 @@ def gainers_losers():
     gainers = {
         'crypto' : [p.text+'USDT' for p in gainers],
         'volume' : [vol for vol in gainers_volume],
+        'change' : [ch for ch in gainers_change],
         'trend_d1' : [trend(p.text+'USDT',Timeframe.DAY) for p in gainers],
         'trend_4h' : [trend(p.text+'USDT',Timeframe.H4) for p in gainers],
         'trend_1h' : [trend(p.text+'USDT',Timeframe.H1) for p in gainers],
