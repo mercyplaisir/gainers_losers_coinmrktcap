@@ -158,12 +158,14 @@ def gainers_losers():
     gainers_volume_tr = gainers_table.find_all('tr')
     # print(gainers_volume_tr[1].fin)
     gainers_volume = [tr.find_all('td')[4].text for tr in gainers_volume_tr[1:]]
+    gainers_cmc_link = [tr.find_all('td')[2].a for tr in gainers_volume_tr[1:]]
     gainers_change = [tr.find_all('td')[3].text for tr in gainers_volume_tr[1:]]
     # print(gainers_volume_tr_td)
     losers = losers_table.find_all('p',{'class':'sc-4984dd93-0 iqdbQL coin-item-symbol'})
     losers_volume_tr = losers_table.find_all('tr')
     # print(gainers_volume_tr[1].fin)
     losers_volume = [tr.find_all('td')[4].text for tr in losers_volume_tr[1:]]
+    losers_cmc_link = [tr.find_all('td')[2].a for tr in losers_volume_tr[1:]]
     losers_change = [tr.find_all('td')[3].text for tr in losers_volume_tr[1:]]
 
     # print(losers_volume_tr_td)
@@ -174,12 +176,15 @@ def gainers_losers():
     # }
     gainers = {
         'crypto' : [p.text for p in gainers],
+        'cmc_link' : [link for link in gainers_cmc_link],
+        
         'volume' : [vol for vol in gainers_volume],
         'change' : [ch for ch in gainers_change],
         'chart_link' : [link.format(p.text+"USDT") for p in gainers]
     }
     losers ={
         'crypto' : [p.text for p in losers],
+
         'volume' : [vol for vol in losers_volume],
         'change' : [ch for ch in losers_change],
         'chart_link' : [link.format(p.text+"USDT") for p in losers]
@@ -189,13 +194,13 @@ def gainers_losers():
 
 gainers,losers = gainers_losers()
 
-gainers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in gainers['crypto']]
-gainers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in gainers['crypto']]
-gainers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in gainers['crypto']]
+# gainers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in gainers['crypto']]
+# gainers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in gainers['crypto']]
+# gainers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in gainers['crypto']]
 
-losers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in losers['crypto']]
-losers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in losers['crypto']]
-losers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in losers['crypto']]
+# losers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in losers['crypto']]
+# losers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in losers['crypto']]
+# losers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in losers['crypto']]
 
 
 #for gainers
