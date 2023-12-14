@@ -98,7 +98,8 @@ def trend(crypto,timeframe):
 # data = pd.DataFrame.from_dict(gainers_losers(),orient='index')
 # data = data.transpose()
 # data.to_excel('crypto.xlsx')
-
+def gainers_losers():
+    """"""
 def gainers_losers():
     # Get trending coins
     lnk = "https://coinmarketcap.com/gainers-losers"
@@ -118,6 +119,7 @@ def gainers_losers():
     losers_volume_tr = losers_table.find_all('tr')
     # print(gainers_volume_tr[1].fin)
     losers_volume = [tr.find_all('td')[4].text for tr in losers_volume_tr[1:]]
+    losers_change = [tr.find_all('td')[3].text for tr in losers_volume_tr[1:]]
     # print(losers_volume_tr_td)
     # data ={
     #     'gainers':[p.text+'USDT' for p in gainers],
@@ -127,7 +129,7 @@ def gainers_losers():
     gainers = {
         'crypto' : [p.text+'USDT' for p in gainers],
         'volume' : [vol for vol in gainers_volume],
-        'change' : [ch for ch in gainers_change],
+        'change' : [ch for ch in losers_change],
         'trend_d1' : [trend(p.text+'USDT',Timeframe.DAY) for p in gainers],
         'trend_4h' : [trend(p.text+'USDT',Timeframe.H4) for p in gainers],
         'trend_1h' : [trend(p.text+'USDT',Timeframe.H1) for p in gainers],
@@ -136,7 +138,7 @@ def gainers_losers():
     losers ={
         'crypto' : [p.text+'USDT' for p in losers],
         'volume' : [vol for vol in losers_volume],
-
+        'change' : [ch for ch in gainers_change],
         'trend_d1' : [trend(p.text+'USDT',Timeframe.DAY) for p in losers],
         'trend_4h' : [trend(p.text+'USDT',Timeframe.H4) for p in losers],
         'trend_1h' : [trend(p.text+'USDT',Timeframe.H1) for p in losers],
