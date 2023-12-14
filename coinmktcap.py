@@ -198,8 +198,9 @@ def get_market_cap(cmc_link:str):
     req = requests.get(cmc_link)
     soup = BeautifulSoup(req.text,features="html.parser")
 
-    mrkt_cap = soup.find('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'}).text
+    mrkt_cap = soup.find('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'}).get('text')
     return mrkt_cap
+
 
 gainers,losers = gainers_losers()
 
