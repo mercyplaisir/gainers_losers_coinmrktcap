@@ -181,26 +181,28 @@ def gainers_losers():
     # }
     gainers = {
         'crypto' : [p.text for p in gainers],
-        'cmc_link' : [link for link in gainers_cmc_link],
         'volume' : [vol for vol in gainers_volume],
         'change' : [ch for ch in gainers_change],
         'chart_link' : [link.format(p.text+"USDT") for p in gainers]
+        'cmc_link' : [link for link in gainers_cmc_link],
     }
     losers ={
         'crypto' : [p.text for p in losers],
-        'cmc_link' : [link for link in losers_cmc_link],
         'volume' : [vol for vol in losers_volume],
         'change' : [ch for ch in losers_change],
-        'chart_link' : [link.format(p.text+"USDT") for p in losers]
+        'chart_link' : [link.format(p.text+"USDT") for p in losers],
+        'cmc_link' : [link for link in losers_cmc_link],
     }
     return gainers,losers
 def get_crypto_data(cmc_link:str):
     req = requests.get(cmc_link)
     soup = BeautifulSoup(req.text,features="html.parser")
 
-    tbl = soup.find('div',{'class': 'sc-f70bb44c-0 iQEJet'})
-    crypto_data = tbl.find_all('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'})
-    mrkt_cap,volume,vol_mrkt_cap,_,_,_ = crypto_data
+    tbl = soup.find_all('div',{'class': 'sc-f70bb44c-0 iQEJet'})
+    #    print(tbl[2])
+    crypto_data = tbl[2].find_all('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'})
+    #print(len(crypto_data))
+    mrkt_cap,volume,vol_mrkt_cap = crypto_data[:3]
     # vol_on_mrkt_cap = soup.find('dd',{'class':'sc-f70bb44c-0 bCgkcs base-text'})
     return [mrkt_cap.text,volume.text,vol_mrkt_cap.text]
 
@@ -210,12 +212,12 @@ gainers,losers = gainers_losers()
 # gainers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in gainers['crypto']]
 # gainers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in gainers['crypto']]
 # gainers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in gainers['crypto']]
-gainers['volume'] = []
+#gainers['volume'] = []
 gainers['market_cap'] = []
 gainers['vol/mrktcap'] = []
 for link in gainers['cmc_link']:
     m,v,v_m = get_crypto_data(link)
-    gainers['volume'].append(v)
+    #gainers['volume'].append(v)
     gainers['market_cap'].append(m)
     gainers['vol/mrktcap'].append(v_m)
 
