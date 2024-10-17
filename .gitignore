@@ -163,3 +163,5 @@ cython_debug/
 # unuseful
 gainers.xlsx
 losers.xlsx
+files/
+test.*
