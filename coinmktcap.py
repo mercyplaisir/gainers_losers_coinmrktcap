@@ -1,6 +1,7 @@
 from typing import List
-from func import save_soup
+from func import save_soup,load_data_json,move_json
 from threading import Thread
+import os
 # from tradeapp.exchanges.binancef.models.timeframe import Timeframe
 # from tradeapp.exchanges.binancef.models.trend import Trend
 import requests
@@ -100,6 +101,20 @@ def trend(crypto,timeframe):
     klines = klines_future(crypto,timeframe)
     return trend_calculator(klines)
 def gainers_losers():
+    """_summary_
+
+    Returns:
+        _type_: {crypto:
+        { chart_link: ...,
+        cmc_link:...,
+        market_cap:...,
+        markt_cap_perc:...,
+        volume:...,
+        vol_perc:...,
+        fdv:...,
+        vol/mrktcap:...
+        }}
+    """
     # Get trending coins
     main_lnk = "https://coinmarketcap.com"
     lnk = main_lnk + "/gainers-losers"
@@ -126,13 +141,6 @@ def gainers_losers():
     losers_cmc_link = [ main_lnk + tr.find_all('td')[1].a.get('href')
                          for tr in losers_volume_tr[1:]]
     losers_change = [tr.find_all('td')[3].text for tr in losers_volume_tr[1:]]
-
-    # print(losers_volume_tr_td)
-    # data ={
-    #     'gainers':[p.text+'USDT' for p in gainers],
-                    
-    #     'losers':[p.text+'USDT' for p in losers]
-    # }
     
     gainers = {
         'crypto' : [p.text for p in gainers_name],
@@ -141,14 +149,36 @@ def gainers_losers():
         'chart_link' : [link.format(p.text+"USDT") for p in gainers_name],
         'cmc_link' : [link for link in gainers_cmc_link],
     }
+    """{name:{}}
+        { chart_link: ...,
+        cmc_link:...,
+        market_cap:...,
+        markt_cap_perc:...,
+        volume:...,
+        vol_perc:...,
+        fdv:...,
+        vol/mrktcap:...
+        }}"""
+    gainers={}
+    counter = 0
+    for name in gainers_name:
+        gainers[name.text]={ 'chart_link': link.format(name.text+"USDT"),
+        'cmc_link':gainers_cmc_link[counter],}
+        counter+=1
     
-    losers ={
-        'crypto' : [p.text for p in losers_name],
-        # 'volume' : [vol for vol in losers_volume],
-        'change' : [ch for ch in losers_change],
-        'chart_link' : [link.format(p.text+"USDT") for p in losers_name],
-        'cmc_link' : [link for link in losers_cmc_link],
-    }
+    # losers ={
+    #     'crypto' : [p.text for p in losers_name],
+    #     # 'volume' : [vol for vol in losers_volume],
+    #     'change' : [ch for ch in losers_change],
+    #     'chart_link' : [link.format(p.text+"USDT") for p in losers_name],
+    #     'cmc_link' : [link for link in losers_cmc_link],
+    # }
+    losers={}
+    counter = 0
+    for name in losers_name:
+        losers[name.text]={ 'chart_link': link.format(name.text+"USDT"),
+        'cmc_link':losers_cmc_link[counter],}
+        counter+=1
     return gainers,losers
 
 def get_cmc_soup(cmc_link):
@@ -164,6 +194,9 @@ def clean_crypto_data(crypto_data):
     elif 'T' in str(mrkt_cap.text):
         mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('T')
         mrkt_cap+='T'
+    elif 'K' in str(mrkt_cap.text):
+        mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('K')
+        mrkt_cap+='K'
     else :
         mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('M')
         mrkt_cap+='M'
@@ -171,6 +204,13 @@ def clean_crypto_data(crypto_data):
     if 'B' in str(volume.text) :
         vol,vol_perc = str(volume.text).split('B')
         vol+='B'
+    elif 'K' in str(volume.text):
+        vol,vol_perc = str(volume.text).split('K')
+        vol+='K'
+    elif 'T' in str(volume.text):
+        vol,vol_perc = str(volume.text).split('T')
+        vol+='T'
+
     else:
         vol,vol_perc = str(volume.text).split('M')
         vol+='M'
@@ -187,77 +227,121 @@ def get_crypto_data(cmc_link:str):
 
     return mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap
 
-gainers,losers = gainers_losers()
 
-#gainers['volume'] = []
-gainers['market_cap'] = []
-gainers['markt_cap_perc']=[]
-gainers['volume']=[]
-gainers['vol_perc']=[]
-gainers['fdv']=[]
-gainers['vol/mrktcap'] = []
+def append_loser(losers):
+    threads = []
+    def _thread_way(losers,loser):
+        mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(losers[loser]['cmc_link'])
+        losers[loser]['market_cap']=mrkt_cap
+        losers[loser]['markt_cap_perc']=mrkt_cap_perc
+        losers[loser]['volume']=vol
+        losers[loser]['vol_perc']=vol_perc
+        losers[loser]['vol/mrktcap']=vol_mrkt_cap
+        losers[loser]['fdv']=fdv
+    for loser in losers.keys():
+        thread = Thread(target=_thread_way,kwargs={'losers':losers,'loser':loser})
+        threads.append(thread)
+        thread.start()
+    for thread in threads:
+        thread.join()
 
-losers['market_cap'] = []
-losers['markt_cap_perc']=[]
-losers['volume']=[]
-losers['vol_perc']=[]
-losers['fdv']=[]
-losers['vol/mrktcap'] = []
+    # mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(cmclink)
+    # losers['market_cap'].append(mrkt_cap)
+    # losers['markt_cap_perc'].append(mrkt_cap_perc)
+    # losers['volume'].append(vol)
+    # losers['vol_perc'].append(vol_perc)
+    # losers['vol/mrktcap'].append(vol_mrkt_cap)
+    # losers['fdv'].append(fdv)
 
-# ------------
-def append_gainer(cmclink):
-    mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(cmclink)
-    gainers['market_cap'].append(mrkt_cap)
-    gainers['markt_cap_perc'].append(mrkt_cap_perc)
-    gainers['volume'].append(vol)
-    gainers['vol_perc'].append(vol_perc)
-    gainers['vol/mrktcap'].append(vol_mrkt_cap)
-    gainers['fdv'].append(fdv)
-
-threads = []
-for link in gainers['cmc_link']:
-    thread = Thread(target=append_gainer,kwargs={'cmclink':link})
-    threads.append(thread)  
-    thread.start()
-
-
-# gainers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in gainers['crypto']]
-# gainers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in gainers['crypto']]
-# gainers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in gainers['crypto']]
-# losers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in losers['crypto']]
-# losers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in losers['crypto']]
-# losers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in losers['crypto']]
-
-#for gainers
-# print(df_gainers_transposed)
-#for losers
-print("finish gainers")
-def append_loser(cmclink):
-    mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(cmclink)
-    losers['market_cap'].append(mrkt_cap)
-    losers['markt_cap_perc'].append(mrkt_cap_perc)
-    losers['volume'].append(vol)
-    losers['vol_perc'].append(vol_perc)
-    losers['vol/mrktcap'].append(vol_mrkt_cap)
-    losers['fdv'].append(fdv)
-losers_threads=[]
-for link in losers['cmc_link']:
-    thread = Thread(target=append_loser,kwargs={'cmclink':link})
-    threads.append(thread)  
-    thread.start()
-
-for thr in threads:
-    thr.join()
+def append_gainer(gainers:dict):
+    threads = []
+    def _thread_way(gainers,gainer):
+        mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(gainers[gainer]['cmc_link'])
+        gainers[gainer]['market_cap']=mrkt_cap
+        gainers[gainer]['markt_cap_perc']=mrkt_cap_perc
+        gainers[gainer]['volume']=vol
+        gainers[gainer]['vol_perc']=vol_perc
+        gainers[gainer]['vol/mrktcap']=vol_mrkt_cap
+        gainers[gainer]['fdv']=fdv
+    for gainer in gainers.keys():
+        thread = Thread(target=_thread_way,kwargs={'gainers':gainers,'gainer':gainer})
+        threads.append(thread)
+        thread.start()
+    for thread in threads:
+        thread.join()
 
 
-df_gainers = pd.DataFrame.from_dict(gainers,orient='index')
-df_gainers = df_gainers.transpose()
-df_gainers.to_excel('gainers.xlsx')
-df_losers = pd.DataFrame.from_dict(losers,orient='index')
-df_losers = df_losers.transpose()
-df_losers.to_excel('losers.xlsx')
 
-def get_gainers():
-    return df_gainers
-def get_losers():
-    return df_losers 
+
+def run():
+
+    gainers,losers = gainers_losers()
+    # print(gainers)
+    # #gainers['volume'] = []
+    # gainers['market_cap'] = []
+    # gainers['markt_cap_perc']=[]
+    # gainers['volume']=[]
+    # gainers['vol_perc']=[]
+    # gainers['fdv']=[]
+    # gainers['vol/mrktcap'] = []
+
+    # losers['market_cap'] = []
+    # losers['markt_cap_perc']=[]
+    # losers['volume']=[]
+    # losers['vol_perc']=[]
+    # losers['fdv']=[]
+    # losers['vol/mrktcap'] = []
+
+    # # ------------
+
+    
+    
+    
+    thread1 = Thread(target=append_gainer,kwargs={'gainers':gainers})
+        
+    thread1.start()
+
+
+    # # gainers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in gainers['crypto']]
+    # # gainers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in gainers['crypto']]
+    # # gainers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in gainers['crypto']]
+    # # losers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in losers['crypto']]
+    # # losers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in losers['crypto']]
+    # # losers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in losers['crypto']]
+
+
+    # for link in losers['cmc_link']:
+    #     print(link)
+    thread2 = Thread(target=append_loser,kwargs={'losers':losers})
+    thread2.start()
+    thread1.join()
+    thread2.join()
+    #     threads.append(thread)  
+    #     thread.start()
+
+    # for thr in threads:
+    #     thr.join()
+
+
+    df_gainers = pd.DataFrame.from_dict(gainers)#,orient='index')
+    df_gainers = df_gainers.transpose()
+    # df_gainers.set_index('crypto',inplace=True)
+    df_losers = pd.DataFrame.from_dict(losers)#,orient='index')
+    df_losers = df_losers.transpose()
+    # df_losers.set_index('crypto',inplace=True)
+    # # into excel
+    df_gainers.to_excel('files/gainers.xlsx')
+    df_losers.to_excel('files/losers.xlsx')
+
+    # # into json
+    df_gainers.to_json('./files/new_gainers.json')
+    df_losers.to_json('./files/new_losers.json')
+
+
+
+def save_gainers_losers():
+    move_json('./files/new_gainers.json','./files/gainers.json')
+    os.remove('./files/new_gainers.json') 
+    move_json('./files/new_losers.json','./files/losers.json')
+    os.remove('./files/new_losers.json') 
+# run()
