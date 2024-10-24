@@ -1,5 +1,6 @@
 from typing import List
-from func import save_soup,load_data_json,move_json
+import binance
+import func
 from threading import Thread
 import os
 # from tradeapp.exchanges.binancef.models.timeframe import Timeframe
@@ -10,17 +11,6 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 from enum import Enum,auto
-
-class Trend(Enum):
-    UPTREND = auto()
-    DOWNTREND = auto()
-    
-    def __str__(self) -> str:
-        return f'{self.name}'
-    def __eq__(self, __value: object) -> bool:
-        return self.name ==  __value
-    def __hash__(self) -> int:
-        return hash(self.name)
 
 
 class Timeframe(Enum):
@@ -61,45 +51,17 @@ def get_tradingview_link(coin:str):
     link = "https://fr.tradingview.com/chart/?symbol=BINANCE%3A{}usdt"
     return link.format(coin)
 # @logger_wrapper(__name__,"retreiving klines")
-def klines_future(pair:str,interval:str):
-    rs = requests.get("https://fapi.binance.com/fapi/v1/indexPriceKlines",params={
-        "pair": pair,
-        "contractType": "PERPERTUAL",
-        "interval" : interval
-    })
-    df = pd.DataFrame(rs.json(),columns=["open time","open","high","low","close","volume","close time","1","2","3","4","5"])
-    df = df.get(["open time","open","high","low","close","close time"])
-    df[["open","high","low","close"]] = df[["open","high","low","close"]].astype(float)
-    # df = df.set_index([pd.Index([i for i in range(df.shape[0])]),'open time'])
-    # print(df)
-    return df
 
-def trend_calculator(df:pd.DataFrame) -> Trend:
-        """give the trend of the current stock
 
-        Args:
-            df (pd.DataFrame): contains ohlc data of given crypto
-        """
-        # data
-        
-        sma_size = 200
-        # Get the trend of the market by using sma200
-        # Get list of 5 last closed price
-        price: List[float] = df["close"][-5:].to_list()
-        # calculate sma
-        df[f"SMA_{sma_size}"] = df["close"].rolling(window=sma_size).mean()
-        sma_value: List[float] = df[f"SMA_{sma_size}"][-5:].to_list()
-        # condition
-        cond = price > sma_value
-        if cond:
-            return Trend.UPTREND
-        return Trend.DOWNTREND
+
 
 # print(gainers_losers())
 
 def trend(crypto,timeframe):
-    klines = klines_future(crypto,timeframe)
-    return trend_calculator(klines)
+    klines = binance.klines_future(crypto,timeframe)
+    return func.trend_calculator(klines)
+
+
 def gainers_losers():
     """_summary_
 
@@ -119,7 +81,7 @@ def gainers_losers():
     main_lnk = "https://coinmarketcap.com"
     lnk = main_lnk + "/gainers-losers"
 
-    req = requests.get(lnk)
+    req = func.request(lnk)
     soup = BeautifulSoup(req.text,features="html.parser")
 
     gainers_table,losers_table = soup.find_all('table')
@@ -182,39 +144,45 @@ def gainers_losers():
     return gainers,losers
 
 def get_cmc_soup(cmc_link):
-    req = requests.get(cmc_link)
+    req = func.request(cmc_link)
     soup = BeautifulSoup(req.text,features="html.parser")
     return soup
-def clean_crypto_data(crypto_data):
-    mrkt_cap,volume,fdv,vol_mrkt_cap = crypto_data[:4]
-    print(mrkt_cap.text,volume.text,fdv.text,vol_mrkt_cap.text)
-    if 'B' in str(mrkt_cap.text) :
-        mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('B') 
-        mrkt_cap+='B'
-    elif 'T' in str(mrkt_cap.text):
-        mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('T')
-        mrkt_cap+='T'
-    elif 'K' in str(mrkt_cap.text):
-        mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('K')
-        mrkt_cap+='K'
-    else :
-        mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('M')
-        mrkt_cap+='M'
-       # checking Volume 
-    if 'B' in str(volume.text) :
-        vol,vol_perc = str(volume.text).split('B')
-        vol+='B'
-    elif 'K' in str(volume.text):
-        vol,vol_perc = str(volume.text).split('K')
-        vol+='K'
-    elif 'T' in str(volume.text):
-        vol,vol_perc = str(volume.text).split('T')
-        vol+='T'
+    
 
-    else:
-        vol,vol_perc = str(volume.text).split('M')
-        vol+='M'
-    return [mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv.text,vol_mrkt_cap.text]
+def clean_crypto_data(crypto_data):
+    try:
+        mrkt_cap,volume,fdv,vol_mrkt_cap = crypto_data[:4]
+        # print(mrkt_cap.text,volume.text,fdv.text,vol_mrkt_cap.text)
+        if 'B' in str(mrkt_cap.text) :
+            mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('B') 
+            mrkt_cap+='B'
+        elif 'T' in str(mrkt_cap.text):
+            mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('T')
+            mrkt_cap+='T'
+        elif 'K' in str(mrkt_cap.text):
+            mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('K')
+            mrkt_cap+='K'
+        else :
+            mrkt_cap,mrkt_cap_perc = str(mrkt_cap.text).split('M')
+            mrkt_cap+='M'
+        # checking Volume 
+        if 'B' in str(volume.text) :
+            vol,vol_perc = str(volume.text).split('B')
+            vol+='B'
+        elif 'K' in str(volume.text):
+            vol,vol_perc = str(volume.text).split('K')
+            vol+='K'
+        elif 'T' in str(volume.text):
+            vol,vol_perc = str(volume.text).split('T')
+            vol+='T'
+
+        else:
+            vol,vol_perc = str(volume.text).split('M')
+            vol+='M'
+        return [mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv.text,vol_mrkt_cap.text]
+    except:
+        print(crypto_data)
+        
 
 def get_crypto_data(cmc_link:str):
     
@@ -231,6 +199,7 @@ def get_crypto_data(cmc_link:str):
 def append_loser(losers):
     threads = []
     def _thread_way(losers,loser):
+        # print(f"getting for {loser}")
         mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(losers[loser]['cmc_link'])
         losers[loser]['market_cap']=mrkt_cap
         losers[loser]['markt_cap_perc']=mrkt_cap_perc
@@ -238,6 +207,9 @@ def append_loser(losers):
         losers[loser]['vol_perc']=vol_perc
         losers[loser]['vol/mrktcap']=vol_mrkt_cap
         losers[loser]['fdv']=fdv
+        losers[loser]['trend_d1'] = trend(loser+'USDT',Timeframe.DAY)# for p in losers[loser]['crypto']]
+        losers[loser]['trend_h4'] = trend(loser+'USDT',Timeframe.H4) #for p in losers[loser]['crypto']]
+        losers[loser]['trend_h1'] = trend(loser+'USDT',Timeframe.H1) #for p in losers[loser]['crypto']]
     for loser in losers.keys():
         thread = Thread(target=_thread_way,kwargs={'losers':losers,'loser':loser})
         threads.append(thread)
@@ -255,7 +227,9 @@ def append_loser(losers):
 
 def append_gainer(gainers:dict):
     threads = []
-    def _thread_way(gainers,gainer):
+    def _thread_way(gainers:dict,gainer):
+        # print(f"getting for {gainer}")
+
         mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(gainers[gainer]['cmc_link'])
         gainers[gainer]['market_cap']=mrkt_cap
         gainers[gainer]['markt_cap_perc']=mrkt_cap_perc
@@ -263,6 +237,9 @@ def append_gainer(gainers:dict):
         gainers[gainer]['vol_perc']=vol_perc
         gainers[gainer]['vol/mrktcap']=vol_mrkt_cap
         gainers[gainer]['fdv']=fdv
+        gainers[gainer]['trend_d1'] = trend(gainer+'USDT',Timeframe.DAY)# for p in gainers['crypto']]
+        gainers[gainer]['trend_h4'] = trend(gainer+'USDT',Timeframe.H4) #for p in gainers['crypto']]
+        gainers[gainer]['trend_h1'] = trend(gainer+'USDT',Timeframe.H1) #for p in gainers['crypto']]
     for gainer in gainers.keys():
         thread = Thread(target=_thread_way,kwargs={'gainers':gainers,'gainer':gainer})
         threads.append(thread)
@@ -276,38 +253,12 @@ def append_gainer(gainers:dict):
 def run():
 
     gainers,losers = gainers_losers()
-    # print(gainers)
-    # #gainers['volume'] = []
-    # gainers['market_cap'] = []
-    # gainers['markt_cap_perc']=[]
-    # gainers['volume']=[]
-    # gainers['vol_perc']=[]
-    # gainers['fdv']=[]
-    # gainers['vol/mrktcap'] = []
 
-    # losers['market_cap'] = []
-    # losers['markt_cap_perc']=[]
-    # losers['volume']=[]
-    # losers['vol_perc']=[]
-    # losers['fdv']=[]
-    # losers['vol/mrktcap'] = []
-
-    # # ------------
-
-    
-    
-    
     thread1 = Thread(target=append_gainer,kwargs={'gainers':gainers})
         
     thread1.start()
 
 
-    # # gainers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in gainers['crypto']]
-    # # gainers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in gainers['crypto']]
-    # # gainers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in gainers['crypto']]
-    # # losers['trend_d1'] = [trend(p+'USDT',Timeframe.DAY) for p in losers['crypto']]
-    # # losers['trend_h4'] = [trend(p+'USDT',Timeframe.H4) for p in losers['crypto']]
-    # # losers['trend_h1'] = [trend(p+'USDT',Timeframe.H1) for p in losers['crypto']]
 
 
     # for link in losers['cmc_link']:
@@ -340,8 +291,7 @@ def run():
 
 
 def save_gainers_losers():
-    move_json('./files/new_gainers.json','./files/gainers.json')
+    func.move_json('./files/new_gainers.json','./files/gainers.json')
     os.remove('./files/new_gainers.json') 
-    move_json('./files/new_losers.json','./files/losers.json')
+    func.move_json('./files/new_losers.json','./files/losers.json')
     os.remove('./files/new_losers.json') 
-# run()
