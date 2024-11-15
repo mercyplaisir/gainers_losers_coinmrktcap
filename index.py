@@ -1,14 +1,21 @@
 import pandas as pd
 import json
 import threading
+
+import telebot.formatting
 import func
 import coinmktcap
 import telegram
 import time
+
+import telebot
 bot = telegram.get_bot()
 def main():
     # get gainers and losers
     while True:
+        count =1
+        bulk_message = "" # append all message and send a bulk
+
         coinmktcap.run()
         print(f"checking...")
         # old
@@ -28,33 +35,50 @@ def main():
         new_gainers_items = func.list_comparison(old_gainers_index,new_gainers_index)
         new_losers_items = func.list_comparison(old_losers_index,new_losers_index)
 
+
         # close by saving new data
         # coinmktcap.save_gainers_losers()
         if len(new_gainers_items)>0:
             for item in new_gainers_items:
-                message = f"""
-                            \n\n  NEW GAINER
-                                Name : {item}
-                                Volume  Mrktcap
-                                {new_gainer.loc[item]['volume']}    {new_gainer.loc[item]['market_cap']}            
+                gainer_message = f"""
+                            NEW GAINER
+                            Name : {item}
+                            Volume  Mrktcap
+                            {new_gainer.loc[item]['volume']}    {new_gainer.loc[item]['market_cap']}
+                                
+                          <a href = "{new_gainer.loc[item]['chart_link']}"> trdv link</a> 
+                          
+                          Trend1h|Trend4h|trend1d
+                          {new_gainer.loc[item]['trend_h1']}|{new_gainer.loc[item]['trend_h4']}|{new_gainer.loc[item]['trend_d1']}
                         """
-                telegram.send_message(bot=bot,message=message)
-        
+                # telegram.send_message(bot=bot,message=message)
+                if count==1:
+                    telegram.send_message(bot=bot,message=gainer_message)
+                else:
+                    bulk_message +=gainer_message
             
         if len(new_losers_items)>0:
             for item in new_losers_items:
-                message = f"""
-                             NEW LOSER
-                            Name : {item}
-                            Volume | Mrktcap
-                            {new_loser.loc[item]['volume']}  |  {new_loser.loc[item]['market_cap']}
-                            trdv link
-                            {new_loser.loc[item]['chart_link']}
-                            Trend1h|Trend4h|trend1d
-                            {new_loser.loc[item]['trend_h1']}|{new_loser.loc[item]['trend_h4']}|{new_loser.loc[item]['trend_d1']}
+                loser_message = f"""
+                             NEW LOSER\n
+                            Name : {item}\n
+                            Volume | Mrktcap\n
+                            {new_loser.loc[item]['volume']}  |  {new_loser.loc[item]['market_cap']}\n
+                            
+                            <a href = "{new_loser.loc[item]['chart_link']}"> trdv link</a>\n 
+
+                            
+                            Trend1h|Trend4h|trend1d\n{new_loser.loc[item]['trend_h1']}|{new_loser.loc[item]['trend_h4']}|{new_loser.loc[item]['trend_d1']}\n
                         """
-                telegram.send_message(bot=bot,message=message)
                 # telegram.send_channel_message(message)
+                if count==1:
+                    telegram.send_message(bot=bot,message=loser_message)
+                else:
+                    bulk_message += loser_message
+
+        if count>1:
+            telegram.send_message(bot=bot,message=bulk_message)
+        count+=1
 
 
         coinmktcap.save_gainers_losers()

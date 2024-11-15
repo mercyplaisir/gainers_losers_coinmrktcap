@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 from enum import Enum,auto
-
+import time
 
 class Timeframe(Enum):
     M1 = '1m'
@@ -45,8 +45,17 @@ class Timeframe(Enum):
 
 link = "https://fr.tradingview.com/chart/?symbol=BINANCE%3A{}"
 
-def get_cmc_link():
-    ...
+def get_cmc():
+    main_lnk = "https://coinmarketcap.com"
+    lnk = main_lnk + "/gainers-losers"
+    try:
+        rq = requests.get(lnk)
+    except requests.exceptions.ConnectionError:
+        print("max retries reachedstoping for a min")
+        time.sleep(60)
+        get_cmc()
+    return rq
+    
 def get_tradingview_link(coin:str):
     link = "https://fr.tradingview.com/chart/?symbol=BINANCE%3A{}usdt"
     return link.format(coin)
@@ -81,7 +90,8 @@ def gainers_losers():
     main_lnk = "https://coinmarketcap.com"
     lnk = main_lnk + "/gainers-losers"
 
-    req = func.request(lnk)
+    # req = func.request(lnk)
+    req = get_cmc()
     soup = BeautifulSoup(req.text,features="html.parser")
 
     gainers_table,losers_table = soup.find_all('table')
@@ -143,8 +153,9 @@ def gainers_losers():
         counter+=1
     return gainers,losers
 
-def get_cmc_soup(cmc_link):
-    req = func.request(cmc_link)
+def get_cmc_soup(cmc_link:str):
+    req = requests.get(cmc_link)
+    # req = func.request(cmc_link)
     soup = BeautifulSoup(req.text,features="html.parser")
     return soup
     
@@ -198,7 +209,7 @@ def get_crypto_data(cmc_link:str):
 
 def append_loser(losers):
     threads = []
-    def _thread_way(losers,loser):
+    def _thread_way(losers:dict,loser:str):
         # print(f"getting for {loser}")
         mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(losers[loser]['cmc_link'])
         losers[loser]['market_cap']=mrkt_cap
