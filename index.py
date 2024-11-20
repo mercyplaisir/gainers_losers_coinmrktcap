@@ -40,16 +40,13 @@ def main():
         # coinmktcap.save_gainers_losers()
         if len(new_gainers_items)>0:
             for item in new_gainers_items:
-                gainer_message = f"""
-                            NEW GAINER
-                            Name : {item}
-                            Volume  Mrktcap
-                            {new_gainer.loc[item]['volume']}    {new_gainer.loc[item]['market_cap']}
-                                
-                          <a href = "{new_gainer.loc[item]['chart_link']}"> trdv link</a> 
-                          
-                          Trend1h|Trend4h|trend1d
-                          {new_gainer.loc[item]['trend_h1']}|{new_gainer.loc[item]['trend_h4']}|{new_gainer.loc[item]['trend_d1']}
+                gainer_message = f"""NEW GAINER
+                    Name : {item}
+                    Volume  Mrktcap
+                    {new_gainer.loc[item]['volume']}    {new_gainer.loc[item]['market_cap']}        
+                    <a href = "{new_gainer.loc[item]['chart_link']}"> trdv link</a> & <a href = "https://www.binance.com/en/futures/{item}USDT"> binance </a>\n
+                    Trend1h|Trend4h|trend1d
+                    {new_gainer.loc[item]['trend_h1']}|{new_gainer.loc[item]['trend_h4']}|{new_gainer.loc[item]['trend_d1']}
                         """
                 # telegram.send_message(bot=bot,message=message)
                 if count==1:
@@ -60,15 +57,13 @@ def main():
         if len(new_losers_items)>0:
             for item in new_losers_items:
                 loser_message = f"""
-                             NEW LOSER\n
-                            Name : {item}\n
-                            Volume | Mrktcap\n
-                            {new_loser.loc[item]['volume']}  |  {new_loser.loc[item]['market_cap']}\n
-                            
-                            <a href = "{new_loser.loc[item]['chart_link']}"> trdv link</a>\n 
-
-                            
-                            Trend1h|Trend4h|trend1d\n{new_loser.loc[item]['trend_h1']}|{new_loser.loc[item]['trend_h4']}|{new_loser.loc[item]['trend_d1']}\n
+                             NEW LOSER
+                            Name : {item}
+                            Volume | Mrktcap
+                            {new_loser.loc[item]['volume']}  |  {new_loser.loc[item]['market_cap']}
+                            <a href = "{new_loser.loc[item]['chart_link']}"> trdv </a> & <a href = "https://www.binance.com/en/futures/{item}USDT"> binance </a>
+                            Trend1h|Trend4h|trend1d
+                            {new_loser.loc[item]['trend_h1']}|{new_loser.loc[item]['trend_h4']}|{new_loser.loc[item]['trend_d1']}\n
                         """
                 # telegram.send_channel_message(message)
                 if count==1:

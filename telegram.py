@@ -60,12 +60,22 @@ def send_channel_message(bot:telebot.TeleBot,message,**kwargs):
         bot.send_message(chat_id=CHANNELID,text=message, timeout=30,**kwargs)#,link_preview_options={'is_disabled':False})
     except requests.exceptions.ConnectionError:
         print("connection error, trying in 30 sec")
-        bot.send_message(chat_id=CHANNELID,text=message, timeout=30)#,link_preview_options={'is_disabled':False})
         time.sleep(30)
-def infinity_polling(bot:telebot.TeleBot):
+        bot.send_message(chat_id=CHANNELID,text=message, timeout=30)#,link_preview_options={'is_disabled':False})
+
+    except telebot.apihelper.ApiTelegramException as e:
+        print("A request to the Telegram API was unsuccessful. Error code: 429. Description: Too Many Request")
+        time.sleep(60)
+        bot.send_message(chat_id=CHANNELID,text=message, timeout=30)#,link_preview_options={'is_disabled':False})
+    except requests.exceptions.Timeout:
+        print("experienced a timeout, waiting 60sec")
+        time.sleep(60)
+        bot.send_message(chat_id=CHANNELID,text=message, timeout=30)#,link_preview_options={'is_disabled':False})
+
+def infinity_polling(bot:telebot.TeleBot) :
     while True:
         try:
-            bot.polling(timeout=30)
+            bot.polling(timeout=50)
         except Timeout:
             print("Readtimout reaching telegram \n witing 10sec")
             time.sleep(10)

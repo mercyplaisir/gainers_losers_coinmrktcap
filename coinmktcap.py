@@ -45,7 +45,7 @@ class Timeframe(Enum):
 
 link = "https://fr.tradingview.com/chart/?symbol=BINANCE%3A{}"
 
-def get_cmc():
+def get_gainlos_page():
     main_lnk = "https://coinmarketcap.com"
     lnk = main_lnk + "/gainers-losers"
     try:
@@ -53,9 +53,19 @@ def get_cmc():
     except requests.exceptions.ConnectionError:
         print("max retries reachedstoping for a min")
         time.sleep(60)
-        get_cmc()
+        get_gainlos_page()
     return rq
-    
+
+def get_coin_page(lnk):
+    try:
+        rq = requests.get(lnk)
+    except requests.exceptions.ConnectionError:
+        print("max retries reachedstoping for a min")
+        time.sleep(60)
+        get_coin_page()
+    return rq
+
+
 def get_tradingview_link(coin:str):
     link = "https://fr.tradingview.com/chart/?symbol=BINANCE%3A{}usdt"
     return link.format(coin)
@@ -91,7 +101,7 @@ def gainers_losers():
     lnk = main_lnk + "/gainers-losers"
 
     # req = func.request(lnk)
-    req = get_cmc()
+    req = get_gainlos_page()
     soup = BeautifulSoup(req.text,features="html.parser")
 
     gainers_table,losers_table = soup.find_all('table')
@@ -153,12 +163,15 @@ def gainers_losers():
         counter+=1
     return gainers,losers
 
-def get_cmc_soup(cmc_link:str):
-    req = requests.get(cmc_link)
-    # req = func.request(cmc_link)
+def get_soup(req):
     soup = BeautifulSoup(req.text,features="html.parser")
     return soup
-    
+
+
+
+def save_soup(soup:BeautifulSoup):
+    with open('test.html','w+') as f:
+        f.write(soup.decode())
 
 def clean_crypto_data(crypto_data):
     try:
@@ -193,25 +206,23 @@ def clean_crypto_data(crypto_data):
         return [mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv.text,vol_mrkt_cap.text]
     except:
         print(crypto_data)
-        
 
-def get_crypto_data(cmc_link:str):
-    
-    soup = get_cmc_soup(cmc_link)
 
-    # tbl = soup.find_all('div',{'class': 'sc-f70bb44c-0 iQEJet'})
-    # save_soup(req.text)
+def get_crypto_data(soup):
     crypto_data = soup.find_all('dd',{'class':'sc-65e7f566-0 eQBACe StatsInfoBox_content-wrapper__onk_o'})
-    mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = clean_crypto_data(crypto_data)
+    # print(crypto_data)
+    return crypto_data
 
-    return mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap
+
 
 
 def append_loser(losers):
     threads = []
     def _thread_way(losers:dict,loser:str):
         # print(f"getting for {loser}")
-        mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(losers[loser]['cmc_link'])
+        rq:requests.Response = get_coin_page(losers[loser]["cmc_link"])
+        soup: BeautifulSoup = get_soup(rq)
+        mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = clean_crypto_data(get_crypto_data(soup))
         losers[loser]['market_cap']=mrkt_cap
         losers[loser]['markt_cap_perc']=mrkt_cap_perc
         losers[loser]['volume']=vol
@@ -240,8 +251,10 @@ def append_gainer(gainers:dict):
     threads = []
     def _thread_way(gainers:dict,gainer):
         # print(f"getting for {gainer}")
-
-        mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(gainers[gainer]['cmc_link'])
+        rq:requests.Response = get_coin_page(gainers[gainer]["cmc_link"])
+        soup: BeautifulSoup = get_soup(rq)
+        mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = clean_crypto_data(get_crypto_data(soup))
+        # mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv,vol_mrkt_cap = get_crypto_data(gainers[gainer]['cmc_link'])
         gainers[gainer]['market_cap']=mrkt_cap
         gainers[gainer]['markt_cap_perc']=mrkt_cap_perc
         gainers[gainer]['volume']=vol
@@ -292,8 +305,8 @@ def run():
     df_losers = df_losers.transpose()
     # df_losers.set_index('crypto',inplace=True)
     # # into excel
-    df_gainers.to_excel('files/gainers.xlsx')
-    df_losers.to_excel('files/losers.xlsx')
+    # df_gainers.to_excel('files/gainers.xlsx')
+    # df_losers.to_excel('files/losers.xlsx')
 
     # # into json
     df_gainers.to_json('./files/new_gainers.json')
@@ -306,3 +319,20 @@ def save_gainers_losers():
     os.remove('./files/new_gainers.json') 
     func.move_json('./files/new_losers.json','./files/losers.json')
     os.remove('./files/new_losers.json') 
+
+
+
+
+
+# with open("test.html",'wb') as f:
+#     f.write(get_coin_page("https://coinmarketcap.com/currencies/bitcoin/").content)
+#     # print(get_coin_soup(
+# print(gainers_losers())
+# rq = get_coin_page("https://coinmarketcap.com/currencies/bitcoin/")
+
+# print(clean_crypto_data(get_crypto_data(get_soup(rq))))
+# g,l = gainers_losers()
+
+# print(g.keys())
+
+# run()

@@ -4,9 +4,9 @@ import json
 import requests
 import pandas as pd
 
-def save_soup(data,filepath):
-    with open(filepath,'w') as f:
-        f.write(data)
+def save_rq(data,filepath=".",filename = "/rq"):
+    with open(filepath+filename,'w') as f:
+        f.write(data )
     return
 
 def load_data_json(filepath):
