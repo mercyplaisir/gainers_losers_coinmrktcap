@@ -309,8 +309,8 @@ def run():
     # df_losers.to_excel('files/losers.xlsx')
 
     # # into json
-    df_gainers.to_json('./files/new_gainers.json')
-    df_losers.to_json('./files/new_losers.json')
+    df_gainers.to_json('files/new_gainers.json')
+    df_losers.to_json('files/new_losers.json')
 
 
 

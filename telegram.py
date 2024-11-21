@@ -7,6 +7,7 @@ import json
 import time
 from typing import Callable
 from dotenv import load_dotenv,find_dotenv
+load_dotenv(find_dotenv())
 
 import requests
 from requests.exceptions import ReadTimeout
@@ -14,7 +15,6 @@ from requests.exceptions import Timeout
 import telebot
 
 
-load_dotenv(find_dotenv())
 API_TOKEN = os.getenv('TELEGRAM')
 
 CHATID = os.getenv('CHATID')
@@ -42,9 +42,6 @@ def echo_message(bot:telebot.TeleBot,message:str):
     bot.reply_to(message, message.text)
 
 def send_message(bot,message):
-    #personal
-    #send_personal_message(bot,message)
-    #channel
     send_channel_message(bot,message,parse_mode = 'HTML')
 
 def send_personal_message(bot:telebot.TeleBot,message:str,**kwargs):

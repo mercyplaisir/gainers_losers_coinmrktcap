@@ -9,6 +9,12 @@ import telegram
 import time
 
 import telebot
+# from binance_handler.binance_handler.errors import SymbolNotFound
+
+from binance_handler import order,binance_handler,errors
+
+
+
 bot = telegram.get_bot()
 def main():
     # get gainers and losers
@@ -19,15 +25,15 @@ def main():
         coinmktcap.run()
         print(f"checking...")
         # old
-        old_gainer = func.load_data_json('./files/gainers.json')
-        old_loser = func.load_data_json('./files/losers.json')
+        old_gainer = func.load_data_json('files/gainers.json')
+        old_loser = func.load_data_json('files/losers.json')
         
         old_gainers_index = func.index(old_gainer)
         old_losers_index = func.index(old_loser)
 
         # new
-        new_gainer = func.load_data_json('./files/new_gainers.json')
-        new_loser = func.load_data_json('./files/new_losers.json')
+        new_gainer = func.load_data_json('files/new_gainers.json')
+        new_loser = func.load_data_json('files/new_losers.json')
         
         new_gainers_index = func.index(new_gainer)
         new_losers_index =func.index( new_loser)
@@ -48,11 +54,17 @@ def main():
                     Trend1h|Trend4h|trend1d
                     {new_gainer.loc[item]['trend_h1']}|{new_gainer.loc[item]['trend_h4']}|{new_gainer.loc[item]['trend_d1']}
                         """
-                # telegram.send_message(bot=bot,message=message)
-                if count==1:
-                    telegram.send_message(bot=bot,message=gainer_message)
-                else:
-                    bulk_message +=gainer_message
+                telegram.send_message(bot=bot,message=gainer_message)
+                try:
+                    order.market_buy_order(symbol=item+"USDT", quantity= binance_handler.minimum_notional(item+"USDT"))
+                except errors.SymbolNotFound:
+                    print(f"{item} was not found")
+                
+                
+                # telegram.send_message(bot=bot,message=f"bought {item}")
+                
+                    
+
             
         if len(new_losers_items)>0:
             for item in new_losers_items:
@@ -66,16 +78,15 @@ def main():
                             {new_loser.loc[item]['trend_h1']}|{new_loser.loc[item]['trend_h4']}|{new_loser.loc[item]['trend_d1']}\n
                         """
                 # telegram.send_channel_message(message)
-                if count==1:
-                    telegram.send_message(bot=bot,message=loser_message)
-                else:
-                    bulk_message += loser_message
-
-        if count>1:
-            telegram.send_message(bot=bot,message=bulk_message)
-        count+=1
-
-
+                
+                telegram.send_message(bot=bot,message=loser_message)
+                
+                try:
+                    order.market_sell_order(item+"USDT", binance_handler.minimum_notional(item+"USDT")) #.minimum_quantity(item+"USDT"))
+                # telegram.send_message(bot=bot,message=f"sold {item}")
+                except errors.SymbolNotFound:
+                    print(f"{item} was not found")
+                    pass
         coinmktcap.save_gainers_losers()
         time.sleep(30)
 
