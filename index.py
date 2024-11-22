@@ -56,7 +56,7 @@ def main():
                         """
                 telegram.send_message(bot=bot,message=gainer_message)
                 try:
-                    order.market_buy_order(symbol=item+"USDT", quantity= binance_handler.minimum_notional(item+"USDT"))
+                    order.market_buy_order(symbol=item+"USDT", quantity= binance_handler.minimum_quantity(item+"USDT"))
                 except errors.SymbolNotFound:
                     print(f"{item} was not found")
                 
@@ -82,7 +82,7 @@ def main():
                 telegram.send_message(bot=bot,message=loser_message)
                 
                 try:
-                    order.market_sell_order(item+"USDT", binance_handler.minimum_notional(item+"USDT")) #.minimum_quantity(item+"USDT"))
+                    order.market_sell_order(item+"USDT", binance_handler.minimum_quantity(item+"USDT")) #.minimum_quantity(item+"USDT"))
                 # telegram.send_message(bot=bot,message=f"sold {item}")
                 except errors.SymbolNotFound:
                     print(f"{item} was not found")

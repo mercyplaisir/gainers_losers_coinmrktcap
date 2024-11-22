@@ -76,6 +76,9 @@ def infinity_polling(bot:telebot.TeleBot) :
         except Timeout:
             print("Readtimout reaching telegram \n witing 10sec")
             time.sleep(10)
+        except requests.ConnectionError:
+            print("ConnectionError reaching telegram \n witing 10sec")
+            time.sleep(10)
 
 # send_personal_message(get_bot(),"<a href = \"google.com\"> trdv link</a>",parse_mode='HTML')
 
