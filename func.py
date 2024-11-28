@@ -9,13 +9,13 @@ def save_rq(data,filepath=".",filename = "/rq"):
         f.write(data )
     return
 
-def load_data_json(filepath):
+def load_data_json(filepath) -> pd.DataFrame:
     with open(filepath,'r') as f:
         data = json.load(f)
 
     data = pd.DataFrame.from_dict(data)
     return data
-def dump_data_json(filepath,data):
+def dump_data_json(filepath,data) -> None:
     
     with open(filepath,'w') as f:
         f.write(data)
@@ -42,8 +42,8 @@ def request(rq):
     try:
         return requests.get(rq)
     except Exception as e :
-        print("the error is",e)
-        print("waiting 10second before retrying")
+        print(f"{__name__} - the error is",e)
+        print(f"{__name__} - waiting 10second before retrying")
         time.sleep(10)
         request(e)
 
@@ -81,3 +81,43 @@ def trend_calculator(df:pd.DataFrame) -> Trend:
         if cond:
             return Trend.UPTREND.name
         return Trend.DOWNTREND.name
+
+TRADES = "files/trades.json"
+
+def _save_order(order:dict):
+    """{symbol,orderId,side,quantity}"""
+    _old_data = _retrieve_orders()
+    
+    _old_data[order["symbol"]] = [order["side"],order["origQty"]]
+    with open(TRADES,"w") as f:
+        f.write(json.dumps(_old_data))
+
+def _remove_orders(symbol):
+    _old_data = _retrieve_orders()
+    
+    del _old_data[symbol]
+    with open(TRADES,"w") as f:
+        f.write(json.dumps(_old_data))
+
+def _retrieve_orders() -> dict:
+    with open(TRADES,'r+') as f:
+        return json.load(f)
+
+GAINERS = "files/gainers.json"
+LOSERS = "files/losers.json"
+
+def _gainers():
+    with open(GAINERS,'r') as f:
+        return json.load(f)['cmc_link'].keys()
+
+
+def _losers():
+    with open(LOSERS,'r') as f:
+        return json.load(f)['cmc_link'].keys()
+
+
+
+# print(f"{generate_gainers_message()}\n{generate_losers_message()}")
+
+
+# print(_retrieve_orders())
