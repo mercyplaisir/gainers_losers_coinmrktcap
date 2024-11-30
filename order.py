@@ -1,7 +1,8 @@
 
 
 
-from binance_handler.futures import binance_handler, errors, order
+from binance_handler.errors import errors
+from binance_handler.futures import binance_handler, order
 import func
 
 
@@ -15,6 +16,9 @@ def send_buy_order(item:str):
     except errors.OrderNotSent:
         print(f"{__name__} - order for {item}  not sent")
         pass
+    except errors.QuantityLessOrEqualToZero:
+        print(f"{item} -quantity less or equal to zero \n we pass it")
+        pass
 
 def send_sell_order(item:str):
     try:
@@ -26,4 +30,7 @@ def send_sell_order(item:str):
         pass
     except errors.OrderNotSent:
         print(f"{__name__} -  - order for {item}  not sent")
+        pass
+    except errors.QuantityLessOrEqualToZero:
+        print(f"{item} -quantity less or equal to zero \n we pass it")
         pass

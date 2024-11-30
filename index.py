@@ -1,26 +1,20 @@
-import pandas as pd
-import json
 import threading
 
-import telebot
-
-from binance_handler.futures import errors, order
 import func
 import coinmktcap
-import messages
+import output.messages as messages
 from order import send_buy_order, send_sell_order
-import telegram
+import telegram_handler
 import time
 
-from binance_handler.futures import binance_handler
 
 from tracker import tracker
 
-bot = telegram.get_bot()
+bot = telegram_handler.get_bot()
 
 GN_LOS_MESSAGE_ID = 1301
 
-
+NOTIONAL = 20
 
 
 
@@ -66,7 +60,7 @@ def main():
         time.sleep(30)
 
 def telegram_loop_running():
-    telegram.infinity_polling(bot)
+    telegram_handler.infinity_polling(bot)
 
 
 t1 = threading.Thread(target=main)
