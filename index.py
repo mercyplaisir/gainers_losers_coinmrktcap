@@ -3,10 +3,9 @@ import threading
 import func
 import coinmktcap
 import output.messages as messages
-from order import send_buy_order, send_sell_order
+from order import  send_buy_order_notional, send_sell_order_notional
 import telegram_handler
 import time
-
 
 from tracker import tracker
 
@@ -16,8 +15,7 @@ GN_LOS_MESSAGE_ID = 1301
 
 NOTIONAL = 20
 
-
-
+LEVERAGE = 5
 
 def main():
     # get gainers and losers
@@ -48,11 +46,11 @@ def main():
         TELEGRAM_UPDATE = False        
         if len(new_gainers_items)>0:
             for item in new_gainers_items:
-                send_buy_order(item=item)
+                send_buy_order_notional(item=item,notional=NOTIONAL,leverage_amount = LEVERAGE)
                 TELEGRAM_UPDATE = True
         if len(new_losers_items)>0:
             for item in new_losers_items:
-                send_sell_order(item=item)
+                send_sell_order_notional(item=item,notional=NOTIONAL, leverage_amount =LEVERAGE)
                 True
         
         if TELEGRAM_UPDATE:

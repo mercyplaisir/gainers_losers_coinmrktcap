@@ -1,7 +1,7 @@
-from binance_handler.errors import errors
+from submodules.binance_handler.errors import errors
 from coinmktcap import gainers_losers
 import func 
-import binance_handler.futures.order as bnb_order
+import submodules.binance_handler.futures.order as bnb_order
 import time
 import output.messages as messages
 

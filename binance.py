@@ -27,4 +27,6 @@ def klines_future(pair:str,interval:str='5m'):
         time.sleep(60)
         klines_future(pair,interval)
     except AssertionError:
+        print(f"{__name__} - AssertionError.', waiting 60sec")
+        time.sleep(60)
         klines_future(pair,interval)

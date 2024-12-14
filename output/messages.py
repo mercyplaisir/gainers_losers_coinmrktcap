@@ -1,7 +1,7 @@
 import time
 from func import _gainers,_losers
-from binance_handler.futures.account_info import account_info_v3
-from binance_handler.errors import errors
+from submodules.binance_handler.futures.account_info import account_info_v3
+from submodules.binance_handler.errors import errors
 import telegram_handler
 import telebot
 
@@ -29,6 +29,7 @@ def _get_account_info():
         data:dict = account_info_v3()
         return data
     except errors.TimestampOutofWindow:
+        print(f"{__name__} getting account info - error TimestampOutofWindow ")
         _get_account_info()
 
 def generate_acc_info_message():
