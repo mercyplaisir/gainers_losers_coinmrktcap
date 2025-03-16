@@ -1,14 +1,12 @@
 import time
 from func import _gainers,_losers
-from submodules.binance_handler.futures.account_info import account_info_v3
-from submodules.binance_handler.errors import errors
+from binance_handler.futures.account_info import account_info_v3
+from binance_handler.errors import errors
+from params import ACC_INFO_ID, GN_LOS_MESSAGE_ID
 import telegram_handler
 import telebot
 
 bot = telegram_handler.get_bot()
-
-GN_LOS_MESSAGE_ID = 1301
-ACC_INFO_ID = 1300
 
 def generate_gainers_losers_message():
     gainers=_gainers()
@@ -61,6 +59,19 @@ def update_message():
         print(e.description)
         print("trying in 30sec")
         time.sleep(30)
+def send_message():
+    gain_los_message = generate_gainers_losers_message()
+    gain_los_clean_message = telebot.formatting.hpre(gain_los_message)        
+    acc_info_message = generate_acc_info_message()
+    acc_info_clean_message = telebot.formatting.hpre(acc_info_message)
+    try:    
+        telegram_handler.send_channel_message(bot=bot,message=gain_los_clean_message,parse_mode = "HTML")
+        telegram_handler.send_channel_message(bot=bot,message=acc_info_clean_message,parse_mode = "HTML")
+    except telebot.apihelper.ApiTelegramException as e:
+        print(e.description)
+        print("trying in 30sec")
+        time.sleep(30)
+
 
 
 

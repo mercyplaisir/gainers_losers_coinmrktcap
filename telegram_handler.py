@@ -7,6 +7,8 @@ import json
 import time
 from typing import Callable
 from dotenv import load_dotenv,find_dotenv
+
+from params import API_TOKEN, CHANNELID, CHATID
 load_dotenv(find_dotenv())
 
 import requests
@@ -15,10 +17,6 @@ from requests.exceptions import Timeout
 import telebot
 
 
-API_TOKEN = os.getenv('TELEGRAM')
-
-CHATID = os.getenv('CHATID')
-CHANNELID= os.getenv('CHANNELID')
 
 
 
@@ -30,7 +28,7 @@ def get_bot() -> telebot.TeleBot:
 # Handle '/start' and '/help'
 # @bot.message_handler(commands=['help', 'start'])
 def send_welcome(bot:telebot.TeleBot, message:str):
-    bot.reply_to(message, """\
+    return bot.send_message( chat_id=CHATID,text="""\
 Hi there, I am EchoBot.
 I am here to echo your kind words back to you. Just say anything nice and I'll say the exact same thing to you!\
 """)
@@ -51,6 +49,14 @@ def send_personal_message(bot:telebot.TeleBot,message:str,**kwargs):
         print(f"{__name__} - connection error, trying in 30 sec")
         time.sleep(30)
         send_personal_message(bot,message)
+def update_personal_message(bot:telebot.TeleBot,message:str,message_id,**kwargs):
+    try:
+        bot.edit_message_text(chat_id=CHATID,text=message,message_id=message_id,timeout=30,**kwargs)
+    except requests.exceptions.ConnectionError:
+        print(f"{__name__} - connection error, trying in 30 sec")
+        time.sleep(30)
+        send_personal_message(bot,message)
+
 
 def send_channel_message(bot:telebot.TeleBot,message,**kwargs):
     try:
@@ -92,7 +98,7 @@ def update_channel_message(bot:telebot.TeleBot,message:str,message_id:int,**kwar
         bot.edit_message_text(chat_id=CHANNELID,text=message, timeout=30,message_id=message_id,**kwargs)#,link_preview_options={'is_disabled':False})
 
     except telebot.apihelper.ApiTelegramException as e:
-        print(f"{__name__} - A request to the Telegram API was unsuccessful. Error code: 429. Description: Too Many Request")
+        print(f"{__name__} - A request to the Telegram API was unsuccessful {e.description}")
         time.sleep(60)
         bot.edit_message_text(chat_id=CHANNELID,text=message, timeout=30,message_id=message_id,**kwargs)#,link_preview_options={'is_disabled':False})
     except requests.exceptions.Timeout:

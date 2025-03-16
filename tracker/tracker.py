@@ -1,7 +1,7 @@
-from submodules.binance_handler.errors import errors
+from binance_handler.errors import errors
 from coinmktcap import gainers_losers
 import func 
-import submodules.binance_handler.futures.order as bnb_order
+import binance_handler.futures.order as bnb_order
 import time
 import output.messages as messages
 
@@ -41,7 +41,7 @@ def closeorder(symbol,quantity,side):
         printout(f"{__name__}  - order for {symbol}  not sent Ttimestamp out of window\n trying again")
         closeorder(symbol,quantity,side)
         pass
-
+        
 
 def side_opposite(side:str):
     if side.upper() == "BUY":
