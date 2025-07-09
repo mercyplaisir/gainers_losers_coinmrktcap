@@ -12,6 +12,7 @@ import pandas as pd
 
 from enum import Enum,auto
 import time
+import errors
 
 class Timeframe(Enum):
     M1 = '1m'
@@ -204,7 +205,7 @@ def clean_crypto_data(crypto_data):
             vol+='M'
         return [mrkt_cap,mrkt_cap_perc,vol,vol_perc,fdv.text,vol_mrkt_cap.text]
     except:
-        print(crypto_data)
+        raise errors.CleanCryptoDataError
 
 
 def get_crypto_data(soup):

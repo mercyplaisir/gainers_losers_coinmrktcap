@@ -4,7 +4,7 @@ import func
 import coinmktcap
 import output.messages as messages
 from order import  send_buy_order_notional, send_sell_order_notional
-import telegram_handler
+import telegram_customs.telegram_handler as telegram_handler
 import time
 from params import LEVERAGE, NOTIONAL, TELEGRAM_UPDATE
 
@@ -12,6 +12,7 @@ from tracker import tracker
 
 bot = telegram_handler.get_bot()
 
+SEND_ORDER:bool
 
 
 def main():
@@ -40,7 +41,7 @@ def main():
         new_losers_items = func.list_comparison(old_losers_index,new_losers_index)
 
         coinmktcap.save_gainers_losers()
-               
+        TELEGRAM_UPDATE = False
         if len(new_gainers_items)>0:
             for item in new_gainers_items:
                 send_buy_order_notional(item=item,notional=NOTIONAL,leverage_amount = LEVERAGE)
@@ -48,7 +49,7 @@ def main():
         if len(new_losers_items)>0:
             for item in new_losers_items:
                 send_sell_order_notional(item=item,notional=NOTIONAL, leverage_amount =LEVERAGE)
-                True
+                TELEGRAM_UPDATE = True
         
         if TELEGRAM_UPDATE:
             messages.update_message()

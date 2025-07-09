@@ -3,7 +3,7 @@ from func import _gainers,_losers
 from binance_handler.futures.account_info import account_info_v3
 from binance_handler.errors import errors
 from params import ACC_INFO_ID, GN_LOS_MESSAGE_ID
-import telegram_handler
+import telegram_customs.telegram_handler as telegram_handler
 import telebot
 
 bot = telegram_handler.get_bot()
